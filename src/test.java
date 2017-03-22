@@ -77,7 +77,7 @@ public class test {
 		String html = Jsoup.clean(e.toString(), user_content_filter);
 		html = html.replaceAll("<//span>", "").replaceAll("<span>", "")
 				.replaceAll("<//a>", "").replaceAll("<a>", "")
-				.replaceAll("&nbsp;", "");
+				.replaceAll("&nbsp;", "").replaceAll("<blockquote>", "").replace("<//blockquote>", "");
 		doc = Jsoup.parseBodyFragment(html, "http://www.cqzb.gov.cn/");
 		return doc;
 	}
@@ -102,7 +102,7 @@ public class test {
 		String html = Jsoup.clean(doc.toString(), user_content_filter);
 		html = html.replaceAll("<//span>", "").replaceAll("<span>", "")
 				.replaceAll("<//a>", "").replaceAll("<a>", "")
-				.replaceAll("&nbsp;", "");
+				.replaceAll("&nbsp;", "").replaceAll("<blockquote>", "").replace("<//blockquote>", "");
 		doc = Jsoup.parseBodyFragment(html);
 		return doc;
 	}
@@ -114,8 +114,8 @@ public class test {
 //		Document doc2 = Jsoup.parse(input2, "UTF-8", "http://www.cqzb.gov.cn/");
 //		doc1 = preParseFromFile(doc1.toString(), "http://www.cqzb.gov.cn/");
 //		doc2 = preParseFromFile(doc2.toString(), "http://www.cqzb.gov.cn/");
-		Document doc1 = preParse("http://www.cqzb.gov.cn/zbgg-5-72980-1.aspx");
-		Document doc2 = preParse("http://www.cqzb.gov.cn/zbgg-5-72916-1.aspx");
+		Document doc1 = preParse("http://www.cqzb.gov.cn/zbgg-5-72181-2.aspx");
+		Document doc2 = preParse("http://www.cqzb.gov.cn/zbgg-5-72361-2.aspx");
 		doc1.select("p").remove();
 		doc2.select("p").remove();
 		System.out.println(doc1);
@@ -150,6 +150,33 @@ public class test {
 				.println(Similarity.DOM_Similarity(doc1.body(), doc2.body()));
 	}
 	
+	public void ZB() throws IOException{
+		Document doc1 = preParseZB("http://www.cqzb.gov.cn/zbgg-5-72300-2.aspx");
+		Document doc2 = preParseZB("http://www.cqzb.gov.cn/zbgg-5-72338-2.aspx");
+		System.out.println(doc1);
+		System.out.println("---------------------");
+		System.out.println(doc2);
+//		if(doc1.body().toString().equals(doc2.body().toString())){
+//			System.out.println("!!!!!!!!!!!!!");
+//		}
+		System.out
+				.println(Similarity.DOM_Similarity(doc1.body(), doc2.body()));
+	}
+	
+	public Document preParseZB(String url) throws IOException {
+		Whitelist user_content_filter = Whitelist.relaxed();
+		Document doc = Jsoup.connect(url).get();
+		Element e = doc.select("div.ztb_con_exp").first();
+		e = e.select("div#ztb_zbxx1").first();
+		e = e.select("table").first();
+		String html = Jsoup.clean(e.toString(), user_content_filter);
+		html = html.replaceAll("<//span>", "").replaceAll("<span>", "")
+				.replaceAll("<//a>", "").replaceAll("<a>", "")
+				.replaceAll("&nbsp;", "").replaceAll("<blockquote>", "").replace("<//blockquote>", "");
+		doc = Jsoup.parseBodyFragment(html, "http://www.cqzb.gov.cn/");
+		doc.select("p").remove();
+		return doc;
+	}
 	
 	public Document getDoc_fakeHeader(String url) throws IOException{
 		Connection connect = Jsoup.connect(url);
@@ -167,6 +194,6 @@ public class test {
 	
 	
 	public static void main(String[] args) throws IOException {
-		new test().test4();
+		new test().ZB();
 	}
 }

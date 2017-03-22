@@ -31,6 +31,8 @@ public class Similarity {
 
 		for (int i = 1; i <= m; i++) {
 			for (int j = 1; j <= n; j++) {
+				double a = Del_Cost(Ts.child(j-1));
+				a = Ins_Cost(Tm.child(i-1));
 				Del_cost = M[i][j-1] + Del_Cost(Ts.child(j-1));
 				Ins_Cost = M[i-1][j] + Ins_Cost(Tm.child(i-1));
 				if (Ts.child(j-1).children().size() == 0) {
@@ -38,9 +40,10 @@ public class Similarity {
 					Sum_Cost = M[i-1][j-1] + Rep_Cost + Ins_Cost(Tm.child(i-1).children());
 				} else if (Tm.child(i-1).children().size() == 0) {
 					Rep_Cost = replace_cost(Tm.child(i-1), Ts.child(j-1));
-					Sum_Cost = M[i-1][j-1] + Rep_Cost + Del_Cost(Tm.child(i-1).children());
+					Sum_Cost = M[i-1][j-1] + Rep_Cost + Del_Cost(Ts.child(j-1).children());
 				} else {
-					Sum_Cost = M[i-1][j-1] + DOM_T_Similarity(Tm.child(i-1), Ts.child(j-1));
+					Rep_Cost = replace_cost(Tm.child(i-1), Ts.child(j-1));
+					Sum_Cost = M[i-1][j-1] + Rep_Cost + DOM_T_Similarity(Tm.child(i-1), Ts.child(j-1));
 				}
 
 				M[i][j] = Math.min(Del_cost, Math.min(Ins_Cost, Sum_Cost));
