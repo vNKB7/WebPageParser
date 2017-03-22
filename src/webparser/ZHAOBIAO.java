@@ -1,3 +1,4 @@
+package webparser;
 public class ZHAOBIAO {
 	public String xmmc = "";//项目名称
 	public String xmbh = "";//项目编号
