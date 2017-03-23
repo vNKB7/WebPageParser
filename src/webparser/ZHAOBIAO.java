@@ -15,6 +15,9 @@ public class ZHAOBIAO {
 	public String lywz = "";//来源网站
 	public String url = "";//网址URL
 	public String wzssdw = "";//网址所属单位
+	public String html = "";//html
+	public String content = "";//content
+	public String title = "";
 
 	
 	public static void main(String[] args) {

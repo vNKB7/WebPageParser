@@ -8,11 +8,17 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.jsoup.Jsoup;
+
 import webparser.ModelSet;
+import webparser.ZHAOBIAO;
 
 public class DAO {
 	public static Connection conn = null;
@@ -21,9 +27,9 @@ public class DAO {
 		try {
 			Class.forName("oracle.jdbc.driver.OracleDriver"); // 加载数据库驱动
 			System.out.println("数据库驱动加载成功！"); // 输出的信息
-			String url = "jdbc:oracle:thin:@localhost:1522:orcl"; // 获取连接URL
-			String user = "zwz"; // 连接用户名
-			String password = "Abc12345"; // 连接密码
+			String url = "jdbc:oracle:thin:@192.168.1.101:1521:orcl"; // 获取连接URL
+			String user = "scott"; // 连接用户名
+			String password = "1234"; // 连接密码
 			conn = DriverManager.getConnection(url, user, password); // 获取数据库连接
 			if (conn != null) {
 				System.out.println("成功的与Oracle数据库建立连接！！");
@@ -37,14 +43,14 @@ public class DAO {
 		return conn;
 	}
 
-	public static List<String> load_content() throws SQLException {
+	public static List<ZHAOBIAO> load_content() throws SQLException {
 		Connection connection = null;
 		Statement stmt = null;
 		ResultSet rs = null;
 		// String sql =
 		// "select * from (select rownum no, HNII_ALARM_SERVICE_20161031.* from HNII_ALARM_SERVICE_20161031 where rownum <= 2) where no >= 1";
-		String sql = "select * from PROJECT_DATA where rownum <= 100";
-		List<String> list = new ArrayList<String>(1000);
+		String sql = "select * from PROJECT_DATA where SOURCE='http://www.cqzb.gov.cn/class-5-1.aspx' and rownum <= 500";
+		List<ZHAOBIAO> list = new ArrayList<ZHAOBIAO>(1000);
 		Pattern p = Pattern.compile("\\s*|\t|\r|\n");
 		try {
 			connection = getConn();
@@ -54,12 +60,12 @@ public class DAO {
 			String HTML = null;
 			int count = 0;
 			while (rs.next()) {
+				ZHAOBIAO zb = new ZHAOBIAO();
 				String id = rs.getString("ID").trim();
 				String TITLE = rs.getString("TITLE").trim();
 				String SOURCE = rs.getString("SOURCE").trim();
 				String URL = rs.getString("URL").trim();
 				String UNITNAME = rs.getString("UNITNAME").trim();
-
 				java.sql.Clob clob = rs.getClob("HTML");
 				inStream = clob.getCharacterStream();
 				char[] c = new char[(int) clob.length()];
@@ -68,16 +74,35 @@ public class DAO {
 				HTML = new String(c);
 				inStream.close();
 
+				// CONTENT
+				clob = rs.getClob("CONTENT");
+				inStream = clob.getCharacterStream();
+				c = new char[(int) clob.length()];
+				inStream.read(c);
+				// data是读出并需要返回的数据，类型是String
+				String CONTENT = new String(c);
+				inStream.close();
+
 				// System.out.print(id + " ");
 				// System.out.print(TITLE);
 				// System.out.print(SOURCE);
 				// System.out.print(URL);
 				// System.out.println();
 				// System.out.println(HTML);
-				if (URL.startsWith("http://www.cqzb.gov.cn/")) {
-					list.add(HTML);
-					count += 1;
-				}
+
+				zb.xmmc = TITLE;
+				zb.html = HTML;
+				zb.content = CONTENT;
+				zb.title = TITLE;
+				zb.url = URL;
+				list.add(zb);
+				count += 1;
+
+				// if (URL.startsWith("http://www.cqzb.gov.cn/")) {
+				// zb.html = HTML
+				// list.add(URL+";"+HTML);
+				// count += 1;
+				// }
 			}
 			System.out.println(count);
 
@@ -95,134 +120,6 @@ public class DAO {
 
 	}
 
-	// public void write_class() throws SQLException {
-	// Classification cla = new Classification();
-	// java.io.File czfile = new java.io.File("db_data/chuzu_zixun.txt");
-	// java.io.PrintWriter czoutput = null;
-	// try {
-	// czoutput = new java.io.PrintWriter(czfile);
-	// } catch (FileNotFoundException e) {
-	// // TODO Auto-generated catch block
-	// e.printStackTrace();
-	// }
-	// java.io.File ctfile = new java.io.File("db_data/chuzu_tousu.txt");
-	// java.io.PrintWriter ctoutput = null;
-	// try {
-	// ctoutput = new java.io.PrintWriter(ctfile);
-	// } catch (FileNotFoundException e) {
-	// // TODO Auto-generated catch block
-	// e.printStackTrace();
-	// }
-	// java.io.File wtfile = new java.io.File("db_data/wangyue_tousu.txt");
-	// java.io.PrintWriter wtoutput = null;
-	// try {
-	// wtoutput = new java.io.PrintWriter(wtfile);
-	// } catch (FileNotFoundException e) {
-	// // TODO Auto-generated catch block
-	// e.printStackTrace();
-	// }
-	//
-	// java.io.File jpfile = new java.io.File("db_data/jp.txt");
-	// java.io.PrintWriter jpoutput = null;
-	// try {
-	// jpoutput = new java.io.PrintWriter(jpfile);
-	// } catch (FileNotFoundException e) {
-	// // TODO Auto-generated catch block
-	// e.printStackTrace();
-	// }
-	//
-	// Connection connection = null;
-	// Statement stmt = null;
-	// ResultSet rs = null;
-	// // String sql =
-	// //
-	// "select * from (select rownum no, HNII_ALARM_SERVICE_20161031.* from HNII_ALARM_SERVICE_20161031 where rownum <= 100000) where no >= 1";
-	// // String sql = "select CONTENT from HNII_ALARM_SERVICE_20161031";
-	// // String sql =
-	// //
-	// "select CONTENT from (select rownum no, HNII_ALARM_SERVICE_20161031.* from HNII_ALARM_SERVICE_20161031 where rownum <= 100000) where no >= 1";
-	// int chuzu = 0, wangyue = 0, zixun = 0, tousu = 0, czzx = 0, czts = 0,
-	// wyzx = 0, wyts = 0, jp = 0;
-	// Pattern p = Pattern.compile("\\s*|\t|\r|\n");
-	// try {
-	// connection = getConn();
-	// stmt = connection.createStatement();
-	// int offset = 1000;
-	// int count = 0;
-	// for (int i = 1; i < 307472 + offset; i += offset) {
-	// List<String> list = new ArrayList<String>(1000);
-	// String sql = String
-	// .format("select CONTENT from (select rownum no, HNII_ALARM_SERVICE_20161031.* from HNII_ALARM_SERVICE_20161031 where rownum <= %d) where no >= %d",
-	// i + offset, i);
-	// System.out.println(sql);
-	// rs = stmt.executeQuery(sql);
-	//
-	// while (rs.next()) {
-	// String content = rs.getString("CONTENT");
-	// Matcher m = p.matcher(content);
-	// content = m.replaceAll("");
-	// list.add(content);
-	// count += 1;
-	// }
-	// System.out.println(count);
-	//
-	// List<String[]> label_list = cla.predict(list);
-	// if (label_list.size() != list.size())
-	// System.out.println(label_list.size() + " " + list.size()
-	// + "!!!!!!!!!!!!!!!!!!!");
-	// for (int k = 0; k < label_list.size(); k++) {
-	// String[] labels = label_list.get(k);
-	// if (labels[1].equals("出租车行业")) {
-	// // System.out.println(labels[2]);
-	// chuzu++;
-	// if (labels[2].equals("咨询")) {
-	// czzx++;
-	// zixun++;
-	// czoutput.write(list.get(k) + "\n");
-	// } else if (labels[2].equals("投诉")) {
-	// tousu++;
-	// czts++;
-	// ctoutput.write(list.get(k) + "\n");
-	// }
-	// } else if (labels[1].equals("网约车行业")) {
-	// // System.out.println(labels[1] + " " + labels[2]);
-	// wangyue++;
-	// if (labels[2].equals("投诉")) {
-	// wtoutput.write(list.get(k) + "\n");
-	// tousu++;
-	// wyts++;
-	// } else if (labels[2].equals("咨询")) {
-	// zixun++;
-	// wyzx++;
-	// }
-	// } else if (labels[1].equals("驾培行业")) {
-	// jp++;
-	// jpoutput.write(list.get(k) + "\n");
-	// }
-	// }
-	// System.out.println("cz=" + chuzu + " wy=" + wangyue + " ts="
-	// + tousu + " zx=" + zixun + " czts=" + czts + " czzx="
-	// + czzx + " wyts=" + wyts + " wyzx=" + wyzx + " jp="
-	// + jp);
-	//
-	// }
-	// } catch (Exception e) {
-	// e.printStackTrace();
-	// } finally {
-	// if (rs != null) {
-	// rs.close();
-	// }
-	// if (stmt != null) {
-	// stmt.close();
-	// }
-	// }
-	// czoutput.close();
-	// ctoutput.close();
-	// wtoutput.close();
-	// jpoutput.close();
-	//
-	// }
-
 	public static void writeFile(String path, List<String> list) {
 		java.io.File file = new java.io.File(path);
 		java.io.PrintWriter output = null;
@@ -238,7 +135,7 @@ public class DAO {
 		output.close();
 
 	}
-	
+
 	public static void writeFile(String path, String str) {
 		java.io.File file = new java.io.File(path);
 		java.io.PrintWriter output = null;
@@ -258,26 +155,211 @@ public class DAO {
 		}
 	}
 
-	public static void main(String[] args) {
-		DAO dao = new DAO();
-		List<String> list = new ArrayList<String>();
+	public void test() {
+		ArrayList<String> zjPrefix = new ArrayList<String>(Arrays.asList(
+				"资金来源为", "资金来自", "资金来源：", "资金来自为", "资金为：", "资金由", "资金：", "资金为",
+				"资金：", "资金为"));
+		ArrayList<String> zjList = new ArrayList<String>(Arrays.asList("自筹资金",
+				"企业自筹", "中央预算内资金", "中央预算投资", "重庆市配套资金", "银行贷款", "业主自筹",
+				"上级补助资金", "地方自筹资金", "开行软贷", "中央资金", "专项建设基金", "金融机构贷款", "政府投资",
+				"国有资金", "区财政配套", "上级资金", "区财政资金", "县级财政资金", "上级专项补助",
+				"中央及市级财政奖励资金", "国有投资", "区县级农村土地整治专项资金", "业主多渠道解决", "市级专项资金",
+				"上级拨付", "对口支援", "政府自筹", "交通专项资金", "县教委统筹资金", "财政性资金",
+				"全国建制镇示范示点补助资金", "国家棚户区改造专项资金", "水利专项资金", "债券资金", "交委补助",
+				"中央政法基础设施建设专项", "市预算内统筹资金", "市级交通资金", "县财政资金", "扶贫资金",
+				"中央财政转移支付", "薄弱学校改造资金", "财政涉农资金", "市商委专项资金", "县地质灾害防治基金",
+				"市级财政资金"));
+		ArrayList<String> zblbList = new ArrayList<String>(Arrays.asList("施工",
+				"监理", "勘察设计"));
+
+		List<ZHAOBIAO> list = new ArrayList<ZHAOBIAO>();
 		try {
-			list = dao.load_content();
-			dao.close();
+			list = load_content();
+			close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		ModelSet ms = new ModelSet();
 
-		for(int i = 0; i < list.size(); i++){
-			String html = list.get(i);
-			int index = ms.get_sim_model(html);
+		for (ZHAOBIAO zb : list) {
+			// 项目名称
+			if (zb.xmmc.endsWith("招标公告")) {
+				zb.xmmc = zb.xmmc.substring(0, zb.xmmc.length() - 4);
+			} else {
+				int index1 = zb.xmmc.lastIndexOf("工程");
+				int index2 = zb.xmmc.lastIndexOf("项目");
+				index1 = index1 > index2 ? index1 : index2;
+				if (index1 > 0) {
+					index2 = zb.xmmc.indexOf("）");
+					if (index2 > 0) {
+						zb.xmmc = zb.xmmc.substring(0, index2 + 1);
+					} else {
+						zb.xmmc = zb.xmmc.substring(0, index1 + 2);
+					}
+				}
+			}
+
+			// 资金来源
+
+			// if(zb.content.contains("资金")){
+			// int index = zb.content.indexOf("资金");
+			// System.out.println(zb.content.substring(index, index + 20));
+			// }
+			//
+
+			Set<String> zijin = new HashSet<String>();
+			for (String s : zjList) {
+				if (zb.content.indexOf(s) != -1) {
+					zijin.add(s);
+					// System.out.println(s);
+				}
+			}
+			if (zijin.size() == 0) {
+				for (String s : zjPrefix) {
+					if (zb.content.indexOf(s) != -1) {
+						int index = zb.content.indexOf(s) + s.length();
+						int offset = 1;
+						while (offset < 20) {
+							char ch = zb.content.charAt(index + offset);
+							if (ch == '，' || ch == '。' || ch == ','
+									|| ch == '.' || ch == '、') {
+								break;
+							}
+							offset++;
+						}
+						if (offset < 20) {
+							zijin.add(zb.content.substring(index, index
+									+ offset));
+							// System.out.println(zb.content.substring(index,
+							// index+offset));
+						}
+					}
+				}
+			}
+			for (String zj : zijin) {
+				zb.zjly += zj + " ";
+			}
+
+			// 招标类别
+
+			for (String zblb : zblbList) {
+				if (zb.title.contains(zblb)) {
+					zb.zblb = zblb;
+					break;
+				}
+			}
+			if (zb.zblb.length() == 0) {
+				for (String zblb : zblbList) {
+					if (zb.content.contains(zblb)) {
+						zb.zblb = zblb;
+						break;
+					}
+				}
+			}
+
+			// 合同段
+			
+			
+			
+			
+			
 		}
-		
-		ms.write_model_data();
+	}
 
+	// public void test2(){
+	// String xmmc = "合川区人民医院二期建设项目（第二次）";
+	// if (xmmc.endsWith("招标公告")) {
+	// xmmc = xmmc.substring(0, xmmc.length() - 4);
+	// } else {
+	// int index1 = xmmc.lastIndexOf("工程");
+	// int index2 = xmmc.lastIndexOf("项目");
+	// index1 = index1 > index2 ? index1 : index2;
+	// if (index1 > 0) {
+	// index2 = xmmc.indexOf("）");
+	// if (index2 > 0) {
+	// xmmc = xmmc.substring(0, index2 + 1);
+	// }else{
+	// xmmc = xmmc.substring(0, index1 + 2);
+	// }
+	// }
+	// }
+	// System.out.println(xmmc);
+	// }
+	//
+	// public void test3(){
+	// ArrayList<String> zjPrefix = new ArrayList<String>(Arrays.asList("资金来源为",
+	// "资金来自", "资金来源：", "资金来自为", "资金为：", "资金由", "资金：", "资金为", "资金：", "资金为"));
+	// ArrayList<String> zjList = new ArrayList<String>(Arrays.asList("企业自筹",
+	// "中央预算内资金", "中央预算投资", "重庆市配套资金", "银行贷款", "业主自筹", "上级补助资金", "地方自筹资金",
+	// "开行软贷", "中央资金", "专项建设基金", "金融机构贷款", "政府投资", "国有资金", "区财政配套", "上级资金",
+	// "区财政资金", "县级财政资金", "上级专项补助", "中央及市级财政奖励资金", "国有投资", "区县级农村土地整治专项资金",
+	// "业主多渠道解决", "市级专项资金", "上级拨付", "对口支援", "政府自筹", "交通专项资金", "县教委统筹资金",
+	// "财政性资金", "全国建制镇示范示点补助资金", "国家棚户区改造专项资金", "水利专项资金", "债券资金", "交委补助",
+	// "中央政法基础设施建设专项", "市预算内统筹资金", "市级交通资金", "县财政资金", "扶贫资金", "中央财政转移支付",
+	// "薄弱学校改造资金", "财政涉农资金", "市商委专项资金", "县地质灾害防治基金", "市级财政资金"));
+	// String content = "我们的，资金来自自己种田，别人给的";
+	// Set<String> zijin = new HashSet<String>();
+	// for(String s : zjList){
+	// if(content.indexOf(s) != -1){
+	// zijin.add(s);
+	// // System.out.println(s);
+	// }
+	// }
+	// if(zijin.size() == 0){
+	// for(String s : zjPrefix){
+	// if(content.indexOf(s) != -1){
+	// int index = content.indexOf(s) + s.length();
+	// int offset = 1;
+	// while(offset < 20){
+	// char ch = content.charAt(index+offset);
+	// if(ch == '，' || ch == '。' || ch == ',' || ch == '.' || ch == '、'){
+	// break;
+	// }
+	// offset++;
+	// }
+	// if(offset < 20){
+	// zijin.add(content.substring(index, index+offset));
+	// // System.out.println(content.substring(index, index+offset));
+	// }
+	// }
+	// }
+	// }
+	// }
+
+	public void test5() throws SQLException{
+		List<ZHAOBIAO> list = load_content();
+
+		for (int i = 0; i < list.size(); i++) {
+			String text = list.get(i).content;
+			int start = 0;
+			while (start < text.length()) {
+				int index = text.indexOf("桩号", start);
+				if (index < 0) {
+					break;
+				}
+				System.out.println(list.get(i).url + " " + text.substring(index-2, index + 20)
+						+ "  ");
+				start = index + 1;
+			}
+//			System.out.println();
+		}
+	}
+	public static void main(String[] args) throws SQLException {
+		DAO dao = new DAO();
+		dao.test5();
+
+		
+		
+		
+		
+		// ModelSet ms = new ModelSet();
+		//
+		// for(int i = 0; i < list.size(); i++){
+		// String html = list.get(i);
+		// int index = ms.get_sim_model(html);
+		// }
+		//
+		// ms.write_model_data();
 	}
 
 }

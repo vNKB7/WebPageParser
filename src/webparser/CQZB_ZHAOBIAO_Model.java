@@ -35,12 +35,9 @@ public class CQZB_ZHAOBIAO_Model {
 		Element e = doc.select("div.ztb_con_exp").first();
 		e = e.select("div#ztb_zbxx1").first();
 		html = Jsoup.clean(e.toString(), user_content_filter);
-		html = html.replaceAll("<//span>", "").replaceAll("<span>", "")
-				.replaceAll("<//a>", "").replaceAll("<a>", "")
-				.replaceAll("&nbsp;", "").replaceAll("<blockquote>", "").replace("<//blockquote>", "");
+		html = html.replaceAll("<//span>", "").replaceAll("<span>", "").replaceAll("<blockquote>", "").replace("<//blockquote>", "");
 		doc = Jsoup.parseBodyFragment(html, "http://www.cqzb.gov.cn/");
-		doc.select("h2").remove();
-		doc.select("h3").remove();
+		doc.select("a").remove();
 		
 		return doc;
 	}
