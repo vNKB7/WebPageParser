@@ -1,16 +1,16 @@
+package webparser;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 public class Similarity {
 
-	
 	public static double DOM_Similarity(Element Tm, Element Ts){
 		double similarity = DOM_T_Similarity(Tm, Ts);
 		//similarity = similarity / (Tm.getAllElements().size() + Ts.getAllElements().size());
-		System.out.println(Tm.getAllElements().size()+":"+Ts.getAllElements().size());
-		System.out.println(Tm.getAllElements().size() + Ts.getAllElements().size());
-		System.out.println(similarity / (Tm.getAllElements().size() + Ts.getAllElements().size()));
-		return similarity;
+		//System.out.println(Tm.getAllElements().size()+":"+Ts.getAllElements().size());
+		//System.out.println(Tm.getAllElements().size() + Ts.getAllElements().size());
+		//System.out.println(similarity / (Tm.getAllElements().size() + Ts.getAllElements().size()));
+		return similarity / (Tm.getAllElements().size() + Ts.getAllElements().size()); //similarity;
 	}
 	
 	public static double DOM_T_Similarity(Element Tm, Element Ts) {

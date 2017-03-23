@@ -1,5 +1,5 @@
-import java.io.File;
-import java.io.IOException;
+package webparser;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,6 +7,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
+import java.io.File;
+import java.io.IOException;
 
 public class Item {
 	public String value;
