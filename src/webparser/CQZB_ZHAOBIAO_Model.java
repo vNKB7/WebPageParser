@@ -39,6 +39,9 @@ public class CQZB_ZHAOBIAO_Model {
 				.replaceAll("<//a>", "").replaceAll("<a>", "")
 				.replaceAll("&nbsp;", "").replaceAll("<blockquote>", "").replace("<//blockquote>", "");
 		doc = Jsoup.parseBodyFragment(html, "http://www.cqzb.gov.cn/");
+		doc.select("h2").remove();
+		doc.select("h3").remove();
+		
 		return doc;
 	}
 	

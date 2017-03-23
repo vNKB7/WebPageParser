@@ -10,7 +10,7 @@ import java.util.List;
 import org.jsoup.nodes.Document;
 
 public class ModelSet {
-	double threshold = 0.4;
+	double threshold = 0.2;
 
 	List<CQZB_ZHAOBIAO_Model> model_set = new ArrayList<CQZB_ZHAOBIAO_Model>();
 	List<Parser> parser_set = new ArrayList<Parser>();

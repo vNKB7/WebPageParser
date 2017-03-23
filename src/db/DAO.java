@@ -274,11 +274,6 @@ public class DAO {
 		for(int i = 0; i < list.size(); i++){
 			String html = list.get(i);
 			int index = ms.get_sim_model(html);
-			if(index == -1){
-				ms.add_model(html);
-			}else{
-				ms.write_html(html, index);
-			}
 		}
 		
 		ms.write_model_data();
