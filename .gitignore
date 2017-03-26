@@ -1,6 +1,7 @@
 /*
-!/src/util
-!/src/sim
+!/src
+src/parser
+src/db
+src/webparser
 !/README.md
-!/data
 !/.gitignore
