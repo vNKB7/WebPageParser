@@ -24,6 +24,44 @@ public class ZHAOBIAO {
 		// TODO Auto-generated method stub
 
 	}
+	
+	public ZHAOBIAO copy(){
+		ZHAOBIAO z = new ZHAOBIAO();
+		z.xmmc =xmmc;
+		z.xmbh =xmbh;
+		z.hylb =hylb;
+		z.zblb =zblb;
+		z.zbr =zbr;
+		z.zbdljg =zbdljg;
+		z.zjly =zjly;
+		z.zbggbh =zbggbh;
+		z.zh =zh;
+		z.htd =htd;
+		z.ggfbsj =ggfbsj;
+		z.wznr =wznr;
+		z.lywz =lywz;
+		z.url =url;
+		z.wzssdw =wzssdw;
+		z.html =html;
+		z.content =content;
+		z.title =title;
+		return z;
+	}
+	
+	public void display(){
+		System.out.println("项目名称:"+xmmc);
+		System.out.println("项目编号:"+xmbh);
+		System.out.println("行业类别:"+hylb);
+		System.out.println("招标类别:"+zblb);
+		System.out.println("招标人:"+zbr);
+		System.out.println("招标代理机构:"+zbdljg);
+		System.out.println("资金来源:"+zjly);
+		System.out.println("招标公告编号:"+zbggbh);
+		System.out.println("桩号:"+zh);
+		System.out.println("合同段:"+htd);
+		System.out.println("url:"+url);
+		System.out.println("------------------------------------");
+	}
 
 }
 

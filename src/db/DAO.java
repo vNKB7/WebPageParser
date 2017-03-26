@@ -16,11 +16,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
-import webparser.ModelSet;
+import sim.CQZB_ZHAOBIAO_Model;
+import sim.ModelSet;
+import util.util;
 import webparser.ZHAOBIAO;
+import webparser.ZHONGBIAO;
 
-public class DAO {
+public class DAO { 
 	public static Connection conn = null;
 
 	static {
@@ -43,13 +49,14 @@ public class DAO {
 		return conn;
 	}
 
-	public static List<ZHAOBIAO> load_content() throws SQLException {
+	public static List<ZHAOBIAO> load_ZHAOBIAO(String sql) throws SQLException {
 		Connection connection = null;
 		Statement stmt = null;
 		ResultSet rs = null;
 		// String sql =
 		// "select * from (select rownum no, HNII_ALARM_SERVICE_20161031.* from HNII_ALARM_SERVICE_20161031 where rownum <= 2) where no >= 1";
-		String sql = "select * from PROJECT_DATA where SOURCE='http://www.cqzb.gov.cn/class-5-1.aspx' and rownum <= 500";
+	//!!!	//String sql = "select * from PROJECT_DATA where SOURCE='http://www.cqzb.gov.cn/class-5-1.aspx' and rownum <= 500";
+//		String sql = "select * from PROJECT_DATA where CONTENT like '%项目编号%' and SOURCE = 'http://www.cqzb.gov.cn/class-5-1.aspx'";
 		List<ZHAOBIAO> list = new ArrayList<ZHAOBIAO>(1000);
 		Pattern p = Pattern.compile("\\s*|\t|\r|\n");
 		try {
@@ -61,6 +68,84 @@ public class DAO {
 			int count = 0;
 			while (rs.next()) {
 				ZHAOBIAO zb = new ZHAOBIAO();
+				String id = rs.getString("ID").trim();
+				String TITLE = rs.getString("TITLE").trim();
+				String SOURCE = rs.getString("SOURCE").trim();
+				String URL = rs.getString("URL").trim();
+				String UNITNAME = rs.getString("UNITNAME").trim();
+				java.sql.Clob clob = rs.getClob("HTML");
+				inStream = clob.getCharacterStream();
+				char[] c = new char[(int) clob.length()];
+				inStream.read(c);
+				// data是读出并需要返回的数据，类型是String
+				HTML = new String(c);
+				inStream.close();
+
+				// CONTENT
+				clob = rs.getClob("CONTENT");
+				inStream = clob.getCharacterStream();
+				c = new char[(int) clob.length()];
+				inStream.read(c);
+				// data是读出并需要返回的数据，类型是String
+				String CONTENT = new String(c);
+				inStream.close();
+
+				// System.out.print(id + " ");
+				// System.out.print(TITLE);
+				// System.out.print(SOURCE);
+				// System.out.print(URL);
+				// System.out.println();
+				// System.out.println(HTML);
+
+				zb.xmmc = TITLE;
+				zb.html = HTML;
+				zb.content = CONTENT;
+				zb.title = TITLE;
+				zb.url = URL;
+				list.add(zb);
+				count += 1;
+
+				// if (URL.startsWith("http://www.cqzb.gov.cn/")) {
+				// zb.html = HTML
+				// list.add(URL+";"+HTML);
+				// count += 1;
+				// }
+			}
+			System.out.println(count);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (rs != null) {
+				rs.close();
+			}
+			if (stmt != null) {
+				stmt.close();
+			}
+		}
+		return list;
+
+	}
+	
+	public static List<ZHONGBIAO> load_ZHONGBIAO(String sql) throws SQLException {
+		Connection connection = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		// String sql =
+		// "select * from (select rownum no, HNII_ALARM_SERVICE_20161031.* from HNII_ALARM_SERVICE_20161031 where rownum <= 2) where no >= 1";
+	//!!!	//String sql = "select * from PROJECT_DATA where SOURCE='http://www.cqzb.gov.cn/class-5-1.aspx' and rownum <= 500";
+//		String sql = "select * from PROJECT_DATA where CONTENT like '%项目编号%' and SOURCE = 'http://www.cqzb.gov.cn/class-5-1.aspx'";
+		List<ZHONGBIAO> list = new ArrayList<ZHONGBIAO>(1000);
+		Pattern p = Pattern.compile("\\s*|\t|\r|\n");
+		try {
+			connection = getConn();
+			stmt = connection.createStatement();
+			rs = stmt.executeQuery(sql);
+			Reader inStream = null;
+			String HTML = null;
+			int count = 0;
+			while (rs.next()) {
+				ZHONGBIAO zb = new ZHONGBIAO();
 				String id = rs.getString("ID").trim();
 				String TITLE = rs.getString("TITLE").trim();
 				String SOURCE = rs.getString("SOURCE").trim();
@@ -174,7 +259,7 @@ public class DAO {
 
 		List<ZHAOBIAO> list = new ArrayList<ZHAOBIAO>();
 		try {
-			list = load_content();
+			list = load_ZHAOBIAO("select * from PROJECT_DATA where SOURCE='http://www.cqzb.gov.cn/class-5-1.aspx' and rownum <= 500");
 			close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -200,13 +285,6 @@ public class DAO {
 			}
 
 			// 资金来源
-
-			// if(zb.content.contains("资金")){
-			// int index = zb.content.indexOf("资金");
-			// System.out.println(zb.content.substring(index, index + 20));
-			// }
-			//
-
 			Set<String> zijin = new HashSet<String>();
 			for (String s : zjList) {
 				if (zb.content.indexOf(s) != -1) {
@@ -258,10 +336,34 @@ public class DAO {
 			}
 
 			// 合同段
+			String biaoduan = "[一二三四五六七八九十123456789]标段";
+			Pattern p = Pattern.compile(biaoduan);
+			Matcher m = p.matcher(zb.title);
+			while (m.find()) {
+				String t = m.group().trim();
+				if (t.length() > 0) {
+					zb.htd += t;
+				}
+			}
+
+			if (zb.htd.length() == 0) {
+				p = Pattern.compile(biaoduan);
+				m = p.matcher(zb.title);
+				while (m.find()) {
+					String t = m.group().trim();
+					if (t.length() > 0) {
+						zb.htd += t;
+					}
+				}
+			}
+			
+			//招标公告编号
+			Document doc = Jsoup.parse(zb.html);
+			Element zbggbh = doc.select("h4#_xmbh1").first();
+			zb.zbggbh = zbggbh.text().trim().substring(7);
 			
 			
-			
-			
+			zb.display();
 			
 		}
 	}
@@ -326,32 +428,52 @@ public class DAO {
 	// }
 	// }
 
-	public void test5() throws SQLException{
-		List<ZHAOBIAO> list = load_content();
+	public void test5() throws SQLException {
+		List<ZHAOBIAO> list = load_ZHAOBIAO("select * from PROJECT_DATA where SOURCE='http://www.cqzb.gov.cn/class-5-1.aspx' and rownum <= 500");
 
 		for (int i = 0; i < list.size(); i++) {
 			String text = list.get(i).content;
 			int start = 0;
 			while (start < text.length()) {
-				int index = text.indexOf("桩号", start);
+				int index = text.indexOf("项目编号", start);
 				if (index < 0) {
 					break;
 				}
-				System.out.println(list.get(i).url + " " + text.substring(index-2, index + 20)
-						+ "  ");
+				System.out.println(list.get(i).url + " "
+						+ text.substring(index - 2, index + 50) + "  ");
 				start = index + 1;
 			}
-//			System.out.println();
 		}
 	}
+	
+	public void test6(){
+		int index = 0;
+		List<ZHAOBIAO> list = new ArrayList<ZHAOBIAO>();
+		try {
+			list = DAO
+					.load_ZHAOBIAO("select * from PROJECT_DATA where INFOTYPE = 0 and UNITNAME = '重庆市招标投标综合网' and rownum <= 1000");
+			DAO.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		for(ZHAOBIAO zb : list){
+			Elements tables = CQZB_ZHAOBIAO_Model.preParse(zb.html).select("table");
+			for(Element table : tables){
+				String html = table.toString();
+				if(html.contains("标段")||html.contains("项目")||html.contains("合同")){
+					util.writeFile("out/"+(index++)+".html", zb.url + "\n" + html);
+				}
+			}
+		}
+	}
+	
+
 	public static void main(String[] args) throws SQLException {
 		DAO dao = new DAO();
-		dao.test5();
+		dao.test6();
 
-		
-		
-		
-		
 		// ModelSet ms = new ModelSet();
 		//
 		// for(int i = 0; i < list.size(); i++){
@@ -360,6 +482,8 @@ public class DAO {
 		// }
 		//
 		// ms.write_model_data();
+		
+		
 	}
 
 }
